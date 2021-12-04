@@ -1,29 +1,36 @@
+#ifndef _LRU_HPP
+#define _LRU_HPP
+
 #include <iostream>
 #include <unordered_map>
-using namespace std;
+#include <string>
 
 struct DLinkedNode {
-    int key, value;
+    std::string key, value;
     DLinkedNode* prev;
     DLinkedNode* next;
-    DLinkedNode(): key(0), value(0), prev(nullptr), next(nullptr) {}
-    DLinkedNode(int _key, int _value): key(_key), value(_value), prev(nullptr), next(nullptr) {}
+    DLinkedNode(): key(""), value(""), prev(nullptr), next(nullptr) {}
+    DLinkedNode(std::string _key, std::string _value): key(_key), value(_value), prev(nullptr), next(nullptr) {}
 };
 
 class LRUCache {
 private:
-    unordered_map<int, DLinkedNode*> cache;
+    std::unordered_map<std::string, DLinkedNode*> cache;
     DLinkedNode* head;
     DLinkedNode* tail;
     int size;
     int capacity;
 
 public:
+    LRUCache();
+
     LRUCache(int _capacity);
+
+    void set_capacity(int _capacity);
     
-    int get(int key);
+    std::string get(std::string key);
     
-    void put(int key, int value);
+    void put(std::string key, std::string value);
 
     void addToHead(DLinkedNode* node);
     
@@ -33,3 +40,6 @@ public:
 	
     DLinkedNode* removeTail();
 
+};
+
+#endif

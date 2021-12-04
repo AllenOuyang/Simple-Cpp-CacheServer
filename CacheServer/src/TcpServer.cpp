@@ -1,10 +1,13 @@
 #include "TcpServer.hpp"
 
+
+// 构造函数，创建用于监听的套接字，ipv4流式传输Tcp协议
 TcpServer::TcpServer()
 {
     m_fd = socket(AF_INET, SOCK_STREAM, 0);
 }
 
+// 析构函数，关闭用于监听的套接字
 TcpServer::~TcpServer()
 {
     close(m_fd);

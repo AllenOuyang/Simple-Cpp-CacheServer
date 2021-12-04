@@ -1,4 +1,13 @@
-#include "lru.h"
+#include "lru.hpp"
+
+LRUCache::LRUCache() : capacity(0), size(0)
+{
+    // 使用伪头部和伪尾部节点
+    head = new DLinkedNode();
+    tail = new DLinkedNode();
+    head->next = tail;
+    tail->prev = head;
+}
 
 LRUCache::LRUCache(int _capacity) : capacity(_capacity), size(0)
 {
@@ -9,11 +18,16 @@ LRUCache::LRUCache(int _capacity) : capacity(_capacity), size(0)
     tail->prev = head;
 }
 
-LRUCache::int get(int key)
+void LRUCache::set_capacity(int _capacity)
+{
+    capacity = _capacity;
+}
+
+std::string LRUCache::get(std::string key)
 {
     if (!cache.count(key))
     {
-        return -1;
+        return "";
     }
     // 如果 key 存在，先通过哈希表定位，再移到头部
     DLinkedNode *node = cache[key];
@@ -21,7 +35,7 @@ LRUCache::int get(int key)
     return node->value;
 }
 
-LRUCache::void put(int key, int value)
+void LRUCache::put(std::string key, std::string value)
 {
     if (!cache.count(key))
     {
@@ -52,7 +66,7 @@ LRUCache::void put(int key, int value)
     }
 }
 
-LRUCache::void addToHead(DLinkedNode *node)
+void LRUCache::addToHead(DLinkedNode *node)
 {
     node->prev = head;
     node->next = head->next;
@@ -60,19 +74,19 @@ LRUCache::void addToHead(DLinkedNode *node)
     head->next = node;
 }
 
-LRUCache::void removeNode(DLinkedNode *node)
+void LRUCache::removeNode(DLinkedNode *node)
 {
     node->prev->next = node->next;
     node->next->prev = node->prev;
 }
 
-LRUCache::void moveToHead(DLinkedNode *node)
+void LRUCache::moveToHead(DLinkedNode *node)
 {
     removeNode(node);
     addToHead(node);
 }
 
-LRUCache::DLinkedNode *removeTail()
+DLinkedNode* LRUCache::removeTail()
 {
     DLinkedNode *node = tail->prev;
     removeNode(node);
