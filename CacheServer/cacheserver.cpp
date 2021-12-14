@@ -3,11 +3,10 @@
 
 int main()
 {
-    // 创建CacheServer，设置最大容量为100
-    CacheServer m_Cache(100);
+    // 创建CacheServer，设置自己的index为0和最大容量为100
+    CacheServer m_Cache(0, 100);
     // 启动CacheServer
     m_Cache.run();
-
     return 0;
 
     // 以下为测试代码，用于测试简单的通信

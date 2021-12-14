@@ -9,7 +9,7 @@ LRUCache::LRUCache() : capacity(0), size(0)
     tail->prev = head;
 }
 
-LRUCache::LRUCache(int _capacity) : capacity(_capacity), size(0)
+LRUCache::LRUCache(int _capacity) : size(0), capacity(_capacity)
 {
     // 使用伪头部和伪尾部节点
     head = new DLinkedNode();
@@ -21,6 +21,16 @@ LRUCache::LRUCache(int _capacity) : capacity(_capacity), size(0)
 void LRUCache::set_capacity(int _capacity)
 {
     capacity = _capacity;
+}
+
+int LRUCache::get_capacity()
+{
+    return capacity;
+}
+
+int LRUCache::get_size()
+{
+    return size;
 }
 
 std::string LRUCache::get(std::string key)

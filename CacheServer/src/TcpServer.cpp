@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-12-02 15:01:27
+ * @LastEditTime: 2021-12-15 00:30:14
+ * @LastEditors: Please set LastEditors
+ * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @FilePath: /CacheServer/src/TcpServer.cpp
+ */
 #include "TcpServer.hpp"
 
 
@@ -22,20 +30,20 @@ int TcpServer::setListen(unsigned short port)
     int ret = bind(m_fd, (struct sockaddr *)&saddr, sizeof(saddr));
     if (ret == -1)
     {
-        perror("bind");
+        perror("bind Client");
         return -1;
     }
-    std::cout << "套接字绑定成功, ip: "
+    std::cout << "Socket for Client was bound successfully, ip: "
               << inet_ntoa(saddr.sin_addr)
               << ", port: " << port << std::endl;
 
     ret = listen(m_fd, 128);
     if (ret == -1)
     {
-        perror("listen");
+        perror("listen Client");
         return -1;
     }
-    std::cout << "设置监听成功..." << std::endl;
+    std::cout << "Set listening for Client successfully..." << std::endl;
 
     return ret;
 }
@@ -51,9 +59,9 @@ TcpSocket *TcpServer::acceptConn(sockaddr_in *addr)
     int cfd = accept(m_fd, (struct sockaddr *)addr, &addrlen);
     if (cfd == -1)
     {
-        perror("accept");
+        perror("accept Client");
         return nullptr;
     }
-    printf("成功和客户端建立连接...\n");
+    printf("Successfully connect to Client...\n");
     return new TcpSocket(cfd);
 }

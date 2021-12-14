@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/master.dir/master.cpp.o CMakeFiles/master.dir/src/MasterServer.cpp.o CMakeFiles/master.dir/src/TcpServer.cpp.o CMakeFiles/master.dir/src/TcpSocket.cpp.o  -o master  -pthread 

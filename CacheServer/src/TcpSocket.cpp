@@ -31,7 +31,7 @@ int TcpSocket::connectToHost(std::string ip, unsigned short port)
         perror("connect");
         return -1;
     }
-    std::cout << "成功和服务器建立连接..." << std::endl;
+    std::cout << "Connect successfully..." << std::endl;
     return ret;
 }
 
@@ -55,7 +55,7 @@ std::string TcpSocket::recvMsg()
     int len = 0;
     readn((char *)&len, 4);
     len = ntohl(len);
-    std::cout << "数据块大小: " << len << std::endl;
+    //std::cout << "数据块大小: " << len << std::endl;
 
     // 根据读出的长度分配内存
     char *buf = new char[len + 1];

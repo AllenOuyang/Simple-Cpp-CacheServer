@@ -25,7 +25,7 @@ int TcpServer::setListen(unsigned short port)
     std::cout << "套接字绑定成功, ip: "
               << inet_ntoa(saddr.sin_addr)
               << ", port: " << port << std::endl;
-
+    std::cout << "haha" << std::endl;
     ret = listen(m_fd, 128);
     if (ret == -1)
     {
