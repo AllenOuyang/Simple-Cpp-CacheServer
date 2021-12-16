@@ -1,9 +1,9 @@
 /*
  * @Author: your name
  * @Date: 2021-12-04 00:25:51
- * @LastEditTime: 2021-12-14 21:39:47
+ * @LastEditTime: 2021-12-16 16:40:11
  * @LastEditors: Please set LastEditors
- * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @Description: 
  * @FilePath: /Project/CacheServer/include/lru.hpp
  */
 #ifndef _LRU_HPP
@@ -12,6 +12,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <mutex>
+#include <shared_mutex>
 
 struct DLinkedNode {
     std::string key, value;
@@ -30,6 +32,7 @@ private:
     DLinkedNode* tail;
     int size;
     int capacity;
+    mutable std::shared_timed_mutex mutex_;
 
 public:
     LRUCache();

@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-12-03 20:36:49
- * @LastEditTime: 2021-12-15 01:46:35
+ * @LastEditTime: 2021-12-16 16:42:28
  * @LastEditors: Please set LastEditors
  * @Description: 
  * @FilePath: /CacheServer/include/CacheServer.hpp
@@ -12,43 +12,51 @@
 #include "TcpSocket.hpp"
 #include "lru.hpp"
 #include "find.hpp"
+#include <thread>
+
+struct SockInfo
+{
+    TcpSocket *_tcp;
+    struct sockaddr_in addr;
+};
 
 class CacheServer : public TcpServer
 {
+public:
     /**
      * @description: thread func for sending self-heartbeat
-     * @param {void} *arg
+     * @param {*}
      * @return {*}
      */
-    friend void *send_heart(void *arg);
+    void sendHeart();
+
+    /**
+     * @description: thread func for listening new distribution got from master
+     * @param {*}
+     * @return {*}
+     */    
+    void recvDistr();
 
     /**
      * @description: thread func for recieving data from other servers
      * @param {void} *arg
      * @return {*}
      */
-    friend void *recvNewData(void *arg);
-
-    /**
-     * @description: thread func for listening new distribution got from master
-     * @param {void} *arg
-     * @return {*}
-     */
-    friend void *recv_distr(void *arg);
+    void recvNewData();
 
     /**
      * @description: thread func for recieving new data from other servers (helper)
      * @param {void} *arg
      * @return {*}
      */
-    friend void *recieving(void *arg);
+    void recieving(struct SockInfo *pinfo);
 
     /**
      * @description: thread func for interacting with clients
      * @param {void} *arg
      * @return {*}
      */
-    friend void *working(void *arg);
+    void working(struct SockInfo *pinfo);
 
 public:
     /**
@@ -57,7 +65,7 @@ public:
      * @param {int} _capacity
      * @return {*}
      */
-    CacheServer(int _index, int _capacity);
+    CacheServer(int _capacity, unsigned short port);
 
     /**
      * @description: fun for launch cacheserver
@@ -71,7 +79,7 @@ public:
      * @param {unsigned short} port
      * @return {*}
      */
-    int setMasterListen(unsigned short port);
+    int setMasterListen();
 
     /**
      * @description: accept application of connection from Master
@@ -85,7 +93,7 @@ public:
      * @param {unsigned short} port
      * @return {*}
      */
-    int setServerListen(unsigned short port);
+    int setServerListen();
 
     /**
      * @description: accept application of connection from other servers
@@ -120,21 +128,16 @@ public:
 private:
     // instantiate a LRUCache object to manage the cache
     LRUCache lru;
-    // the index of this CacheServer
-    int index;
     // socket for listening Master
     int master_fd;
+    // port for master
+    unsigned short m_port;
     // socket for listening other servers
     int server_fd;
+    //port for servers
+    unsigned short s_port;
     // maintain a Find object to manage local kv distribution
     Find m_find;
-};
-
-struct SockInfo
-{
-    CacheServer *_server;
-    TcpSocket *_tcp;
-    struct sockaddr_in addr;
 };
 
 #endif

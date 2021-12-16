@@ -50,6 +50,7 @@ int TcpSocket::sendMsg(std::string msg)
 
 std::string TcpSocket::recvMsg()
 {
+    
     // 接收数据
     // 1. 读数据头
     int len = 0;
@@ -76,7 +77,6 @@ int TcpSocket::readn(char *buf, int size)
     int nread = 0;
     int left = size;
     char *p = buf;
-
     while (left > 0)
     {
         if ((nread = read(m_fd, p, left)) > 0)

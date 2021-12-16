@@ -1,3 +1,0 @@
-/home/oyll/Project/CacheServer/build/CMakeFiles/rebuild_cache.dir
-/home/oyll/Project/CacheServer/build/CMakeFiles/edit_cache.dir
-/home/oyll/Project/CacheServer/build/CMakeFiles/cacheserver.dir

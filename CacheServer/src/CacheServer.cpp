@@ -1,6 +1,6 @@
 #include "CacheServer.hpp"
 
-void *send_heart(void *arg)
+void CacheServer::sendHeart()
 {
     std::cout << "The heartbeat sending thread started." << std::endl;
     /*create a socket to connect to Master*/
@@ -17,29 +17,28 @@ void *send_heart(void *arg)
     }
 }
 
-void *recv_distr(void *arg)
+void CacheServer::recvDistr()
 {
-    CacheServer *cs = (CacheServer *)arg;
-    cs->setMasterListen(25001);
-
+    setMasterListen();
     while (1)
     {
         SockInfo *info = new SockInfo;
-        TcpSocket *tcp = cs->acceptMasterConn(&info->addr);
+        TcpSocket *tcp = acceptMasterConn(&info->addr);
         if (tcp == nullptr)
         {
             std::cout << "Retry to accept connection...." << std::endl;
             continue;
         }
         std::string distr_info = tcp->recvMsg();
-        cs->m_find.renew(distr_info);
-        cs->update_distr();
+        std::cout << "Recieved new distribution: " << distr_info << std::endl;
+        m_find.renew(distr_info);
+        update_distr();
     }
 }
 
-void *recieving(void *arg)
+void CacheServer::recieving(struct SockInfo *pinfo)
 {
-    struct SockInfo *pinfo = static_cast<struct SockInfo *>(arg);
+    //struct SockInfo *pinfo = static_cast<struct SockInfo *>(arg);
     /*connect successfully , print the server's info of IP and Port*/
     char ip[32];
     std::cout << "Server's IP: " << inet_ntop(AF_INET, &pinfo->addr.sin_addr.s_addr, ip, sizeof(ip))
@@ -58,22 +57,20 @@ void *recieving(void *arg)
         os >> key >> value;
         os.clear();
         /*save the newly got kv*/
-        pinfo->_server->put(key, value);
+        put(key, value);
     }
     delete pinfo->_tcp;
     delete pinfo;
-    return nullptr;
 }
 
-void *recvNewData(void *arg)
+void CacheServer::recvNewData()
 {
-    CacheServer *cs = (CacheServer *)arg;
-    cs->setServerListen(25002);
+    setServerListen();
     /*block and wait for the client to connect*/
     while (1)
     {
-        SockInfo *info = new SockInfo;
-        TcpSocket *tcp = cs->acceptServerConn(&info->addr);
+        struct SockInfo *info = new SockInfo;
+        TcpSocket *tcp = acceptServerConn(&info->addr);
         if (tcp == nullptr)
         {
             std::cout << "Retry to accept connection...." << std::endl;
@@ -81,18 +78,13 @@ void *recvNewData(void *arg)
         }
         /*create a child thread for recieving the data from the 
             just connected server*/
-        pthread_t ttid;
-        info->_server = cs;
-        info->_tcp = tcp;
-
-        pthread_create(&ttid, NULL, recieving, info);
-        pthread_detach(ttid);
+        std::thread recieve(&CacheServer::recieving, this, info);
+        recieve.detach();
     }
 }
 
-void *working(void *arg)
+void CacheServer::working(struct SockInfo *pinfo)
 {
-    struct SockInfo *pinfo = static_cast<struct SockInfo *>(arg);
     /*connect successfully , print the client's info of IP and Port*/
     char ip[32];
     std::cout << "Client's IP: " << inet_ntop(AF_INET, &pinfo->addr.sin_addr.s_addr, ip, sizeof(ip))
@@ -119,9 +111,9 @@ void *working(void *arg)
                 else if value is empty, that means it is a 'Query request'*/
             if (value != "")
             {
-                if (pinfo->_server->m_find.findserver(key) == "127.0.0.1")
+                if (m_find.findserver(key) == "127.0.0.1")
                 {
-                    pinfo->_server->put(key, value);
+                    put(key, value);
                     std::cout << "recived: "
                               << " [key] = " << key
                               << " [value] = " << value
@@ -139,9 +131,9 @@ void *working(void *arg)
             }
             else
             {
-                if (pinfo->_server->m_find.findserver(key) == "127.0.0.1")
+                if (m_find.findserver(key) == "127.0.0.1")
                 {
-                    std::string value = pinfo->_server->get(key);
+                    std::string value = get(key);
                     if (value != "")
                     {
                         std::cout << " [key] = " << key
@@ -173,72 +165,55 @@ void *working(void *arg)
     }
     delete pinfo->_tcp;
     delete pinfo;
-    return nullptr;
 }
 
-CacheServer::CacheServer(int _index, int _capacity) : index(_index)
+CacheServer::CacheServer(int _capacity, unsigned short port) : TcpServer(port)
 {
     lru.set_capacity(_capacity);
     master_fd = socket(AF_INET, SOCK_STREAM, 0);
+    m_port = port + 1;
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    s_port = port + 2;
 }
 
 void CacheServer::run()
 {
-    int ret;
     /*create a child thread for sending own heartbeat package to master*/
-    pthread_t tid1;
-    ret = pthread_create(&tid1, NULL, send_heart, NULL);
-    if (ret != 0)
-    {
-        std::cout << "Can not create send_heart thread!" << std::endl;
-        exit(1);
-    }
+    // std::thread send_Heart(&CacheServer::sendHeart, this);
+    // send_Heart.detach();
 
     /*create a child thread for recieving new distribution of data from master*/
-    pthread_t tid2;
-    ret = pthread_create(&tid2, NULL, recv_distr, (void *)this);
-    if (ret != 0)
-    {
-        std::cout << "Can not create recv_distr thread!" << std::endl;
-        exit(1);
-    }
+    std::thread recv_distr(&CacheServer::recvDistr, this);
+    recv_distr.detach();
 
     /*create a child thread for recieving new Data from other cacheservers*/
-    pthread_t tid3;
-    ret = pthread_create(&tid3, NULL, recvNewData, (void *)this);
-    if (ret != 0)
-    {
-        std::cout << "Can not create recvNewData thread!" << std::endl;
-    }
+    std::thread recvData(&CacheServer::recvNewData, this);
+    recvData.detach();
 
     /*set listening port for interacting with clients*/
-    setListen(25000);
+    setListen();
     /*block and wait for the client to connect*/
     while (1)
     {
-        SockInfo *info = new SockInfo;
+        struct SockInfo *info = new SockInfo;
         TcpSocket *tcp = acceptConn(&info->addr);
         if (tcp == nullptr)
         {
             std::cout << "Retry to accept connection...." << std::endl;
             continue;
         }
-        /*create a child thread for interacting with client*/
-        pthread_t tid;
-        info->_server = this;
         info->_tcp = tcp;
-
-        pthread_create(&tid, NULL, working, info);
-        pthread_detach(tid);
+        /*create a child thread for interacting with client*/
+        std::thread work(&CacheServer::working, this, info);
+        work.detach();
     }
 }
 
-int CacheServer::setMasterListen(unsigned short port)
+int CacheServer::setMasterListen()
 {
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(port);
+    saddr.sin_port = htons(m_port);
     saddr.sin_addr.s_addr = INADDR_ANY; // 0 = 0.0.0.0
     int ret = bind(master_fd, (struct sockaddr *)&saddr, sizeof(saddr));
     if (ret == -1)
@@ -248,7 +223,7 @@ int CacheServer::setMasterListen(unsigned short port)
     }
     std::cout << "Socket for Master was bound successfully, ip: "
               << inet_ntoa(saddr.sin_addr)
-              << ", port: " << port << std::endl;
+              << ", port: " << m_port << std::endl;
 
     ret = listen(master_fd, 128);
     if (ret == -1)
@@ -279,11 +254,11 @@ TcpSocket *CacheServer::acceptMasterConn(sockaddr_in *addr)
     return new TcpSocket(cfd);
 }
 
-int CacheServer::setServerListen(unsigned short port)
+int CacheServer::setServerListen()
 {
     struct sockaddr_in saddr;
     saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(port);
+    saddr.sin_port = htons(s_port);
     saddr.sin_addr.s_addr = INADDR_ANY; // 0 = 0.0.0.0
     int ret = bind(server_fd, (struct sockaddr *)&saddr, sizeof(saddr));
     if (ret == -1)
@@ -293,7 +268,7 @@ int CacheServer::setServerListen(unsigned short port)
     }
     std::cout << "Socket for Server was bound successfully, ip: "
               << inet_ntoa(saddr.sin_addr)
-              << ", port: " << port << std::endl;
+              << ", port: " << s_port << std::endl;
 
     ret = listen(server_fd, 128);
     if (ret == -1)
@@ -354,7 +329,3 @@ void CacheServer::update_distr()
         /*if it belongs to, do nothing*/
     }
 }
-
-/*port 25000 for Clients
-  port 25001 for Master
-  port 25002 for Servers*/

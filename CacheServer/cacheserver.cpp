@@ -1,37 +1,21 @@
+/*
+ * @Author: your name
+ * @Date: 2021-12-02 15:32:22
+ * @LastEditTime: 2021-12-16 16:39:15
+ * @LastEditors: your name
+ * @Description:
+ * @FilePath: /CacheServer/cacheserver.cpp
+ */
 #include "TcpSocket.hpp"
 #include "CacheServer.hpp"
 
 int main()
 {
-    // 创建CacheServer，设置自己的index为0和最大容量为100
-    CacheServer m_Cache(0, 100);
-    // 启动CacheServer
+    /*create a instance of CacheServer with first parms = 100 (set capacity of LRU)
+        second param = 6666 (the port number for listening clients, and 6666+1 for master
+        6666+2 for servers)*/
+    CacheServer m_Cache(100, 6666);
+    /*launch cache server*/
     m_Cache.run();
     return 0;
-
-    // 以下为测试代码，用于测试简单的通信
-    // // 1. 创建监听的套接字，指定LRUCache的大小为100
-    // CacheServer s(100);
-    // // 2. 绑定本地的IP port并设置监听
-    // s.setListen(10000);
-    // // 3. 阻塞并等待客户端的连接
-    // while (1)
-    // {
-    //     SockInfo* info = new SockInfo;
-    //     TcpSocket* tcp = s.acceptConn(&info->addr);
-    //     if (tcp == nullptr)
-    //     {
-    //         std::cout << "重试...." << std::endl;
-    //         continue;
-    //     }
-    //     // 创建子线程
-    //     pthread_t tid;
-    //     info->s = &s;
-    //     info->tcp = tcp;
-
-    //     pthread_create(&tid, NULL, working, info);
-    //     pthread_detach(tid);
-    // }
-
-    // return 0;
 }

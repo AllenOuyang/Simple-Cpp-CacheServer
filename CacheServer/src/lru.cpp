@@ -35,6 +35,7 @@ int LRUCache::get_size()
 
 std::string LRUCache::get(std::string key)
 {
+    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
     if (!cache.count(key))
     {
         return "";
@@ -47,6 +48,7 @@ std::string LRUCache::get(std::string key)
 
 void LRUCache::put(std::string key, std::string value)
 {
+    std::unique_lock<std::shared_timed_mutex> lock(mutex_);
     if (!cache.count(key))
     {
         // 如果 key 不存在，创建一个新的节点
